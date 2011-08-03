@@ -33,5 +33,3 @@ install(FILES graph.cpp  DESTINATION ${PYTHON_SITE_PACKAGES}/gco/)
 install(FILES block.h  DESTINATION ${PYTHON_SITE_PACKAGES}/gco/)
 install(FILES maxflow.cpp  DESTINATION ${PYTHON_SITE_PACKAGES}/gco/)
 install(TARGETS gco  DESTINATION ${PYTHON_SITE_PACKAGES}/gco/)
-
-#install(TARGETS gco DESTINATION lib)
