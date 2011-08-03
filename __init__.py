@@ -1,9 +1,12 @@
 import numpy as np
 from scipy.weave import inline,converters
+import os
 
 def cut(width, height, data_cost, smoothness_cost):
+    """ datacost is num_pixels*num_labels, smoothness_cost is num_labels*num_labels, num_pizels = width*height
+        it must be true that for each two labels i,j smoothness_cost(i,i) + smoothness_cost(j,j) <= smoothness_cost(i,j) + smoothness_cost(j,i)
+    """
 
-    """ datacost is num_pixels*num_labels, smoothness_cost is num_labels*num_labels, num_pizels = width*height """
 
     num_labels = smoothness_cost.shape[0]
     assert(data_cost.shape[1]==num_labels and smoothness_cost.shape[1]==num_labels)
@@ -12,7 +15,6 @@ def cut(width, height, data_cost, smoothness_cost):
     result = np.zeros((width,height),np.int32)
     data_cost = (100 * data_cost).astype(np.int32)
     smoothness_cost = (100 * smoothness_cost).astype(np.int32)
-    objects = ["GCoptimization.o","graph.o", "LinkedBlockList.o","maxflow.o"]
 
     code = """
            int* data_p = (int*) &data_cost(0,0);
@@ -30,8 +32,11 @@ def cut(width, height, data_cost, smoothness_cost):
                    }
            delete gc;
            """
-    #inline(code,['data_cost','smoothness_cost','result','width','height','num_labels'], extra_objects=objects, type_converters=converters.blitz, verbose=1, force=1, headers=["stdio","math","GCoptimization.h"])
-    inline(code,['data_cost','smoothness_cost','result','width','height','num_labels'], extra_objects=objects, type_converters=converters.blitz, verbose=1, force=1, headers=['"GCoptimization.h"'],include_dirs=['.'])
+    inline(code,['data_cost','smoothness_cost','result','width','height','num_labels'],
+            type_converters=converters.blitz, verbose=0, force=0,
+            headers=['"GCoptimization.h"'], include_dirs=[os.path.dirname(__file__)], compiler="gcc", libraries=["gco"], 
+            library_dirs=[os.path.join(os.getcwd(), os.path.dirname(__file__))],
+            runtime_library_dirs=[os.path.join(os.getcwd(), os.path.dirname(__file__))])
     return result
 
 def demo():
@@ -45,7 +50,7 @@ def demo():
     data_cost = np.vstack([image.ravel(), 1-image.ravel()]).T.copy("C")
     #data_cost = np.vstack([np.zeros_like(image.ravel()), np.ones_like(image.ravel())]).T.copy("C")
     print(data_cost.shape)
-    beta = 0.4
+    beta = 0.3
     smoothness_cost = np.array([[0, beta],[beta, 0]])
 
     segmentation = cut(image.shape[0], image.shape[1], data_cost, smoothness_cost)
