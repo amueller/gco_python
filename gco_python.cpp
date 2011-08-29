@@ -6,6 +6,8 @@
 
 #include "GCoptimization.h"
 
+using namespace boost;
+
 pyublas::numpy_matrix<int> cut_simple(const int& height, const int& width,
     const pyublas::numpy_matrix<double> & data_cost,
     const pyublas::numpy_matrix<double>& smoothness_cost){
@@ -89,8 +91,70 @@ cut_VH(const pyublas::numpy_matrix<double> & data_cost,
     return result;
     }
 
+pyublas::numpy_vector<int>
+cut_from_graph(const boost::python::list & graph,
+    const pyublas::numpy_matrix<double>& data_cost,
+    const pyublas::numpy_matrix<double>& smoothness_cost){
+    //const size_t ndims = masks.ndim();
+    //assert(ndims==3);
+    //const npy_intp * const dims = masks.dims();
+    //const int num_masks = dims[0];    const int height = dims[1];
+    //const int width = dims[2];
+    const int num_labels = smoothness_cost.size1();
+    const int num_vertices = data_cost.size1();
+
+    // rounding doubles to ints for more stable optimization
+    const int precision = 100;
+    boost::numeric::ublas::matrix<int> smoothness_cost_int(num_labels, num_labels);
+    boost::numeric::ublas::vector<int> result(num_vertices);
+    boost::numeric::ublas::matrix<int> data_cost_int(num_labels, num_vertices);
+
+    for (int i=0; i<num_vertices*num_labels; i++){
+        data_cost_int.data()[i] = precision * precision * data_cost.data()[i];
+    }
+    for (int i=0; i<num_labels*num_labels; i++){
+        smoothness_cost_int.data()[i] = precision * smoothness_cost.data()[i];
+    }
+
+    assert(smoothness_cost.size2() == num_labels);
+    assert(data_cost.size2()==num_labels);
+
+    GCoptimizationGeneralGraph gc(num_vertices, num_labels);
+    for(python::ssize_t i=0;i<len(graph);i++) {
+        gc.setNeighbors(python::extract<int>(python::list(graph[i])[0]), python::extract<int>(python::list(graph[i])[1]));
+    }
+    gc.setDataCost(data_cost_int.data().begin());
+    gc.setSmoothCost(smoothness_cost_int.data().begin());
+    gc.expansion(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
+    for ( int  i = 0; i < num_vertices; i++ ){
+        result.data()[i] = gc.whatLabel(i);
+    }
+
+    return result;
+}
+
+//pyublas::numpy_matrix<int>
+//cut_from_segments(const pyublas::numpy_vector<double> & masks,
+    //const pyublas::numpy_matrix<double>& data_cost,
+    //const pyublas::numpy_matrix<double>& smoothness_cost){
+    //const size_t ndims = masks.ndim();
+    //assert(ndims==3);
+
+    //const npy_intp * const dims = masks.dims();
+    //const int num_masks = dims[0];
+    //const int height = dims[1];
+    //const int width = dims[2];
+    //const int num_labels = smoothness_cost.size1();
+    //assert(smoothness_cost.size2() == num_labels);
+    //assert(data_cost.size1()==num_masks);
+    //assert(data_cost.size2()==num_labels);
+
+
+//}
+
 BOOST_PYTHON_MODULE(gco_python)
     {
         boost::python::def("cut_VH", cut_VH);
         boost::python::def("cut_simple", cut_simple);
+        boost::python::def("cut_from_graph", cut_from_graph);
     }
