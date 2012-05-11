@@ -97,33 +97,64 @@ cut_VH(const pyublas::numpy_matrix<double> & data_cost,
     }
 
 pyublas::numpy_vector<int>
-cut_from_graph(const boost::python::list & graph,
+cut_from_graph_weighted(const boost::python::list & graph,
     const pyublas::numpy_matrix<double>& data_cost,
     const pyublas::numpy_matrix<double>& smoothness_cost){
-    //const size_t ndims = masks.ndim();
-    //assert(ndims==3);
-    //const npy_intp * const dims = masks.dims();
-    //const int num_masks = dims[0];    const int height = dims[1];
-    //const int width = dims[2];
     const int num_labels = smoothness_cost.size1();
     const int num_vertices = data_cost.size1();
-    assert(data_cost.size1() == num_labels);
+    
+    if (smoothness_cost.size2() == num_labels)
+        throw std::runtime_error("Smoothnes cost size wrong");
+    if (data_cost.size2()==num_labels)
+        throw std::runtime_error("data cost size wrong");
 
     // rounding doubles to ints for more stable optimization
-    const int precision = 100;
     boost::numeric::ublas::matrix<int> smoothness_cost_int(num_labels, num_labels);
     boost::numeric::ublas::vector<int> result(num_vertices);
     boost::numeric::ublas::matrix<int> data_cost_int(num_vertices, num_labels);
 
     for (int i=0; i<num_vertices*num_labels; i++){
-        data_cost_int.data()[i] = precision * precision * data_cost.data()[i];
+        data_cost_int.data()[i] = std::ceil(data_cost.data()[i]);
     }
     for (int i=0; i<num_labels*num_labels; i++){
-        smoothness_cost_int.data()[i] = precision * smoothness_cost.data()[i];
+        smoothness_cost_int.data()[i] = std::ceil(smoothness_cost.data()[i]);
     }
+
+    GCoptimizationGeneralGraph gc(num_vertices, num_labels);
+    for(python::ssize_t i=0;i<len(graph);i++) {
+        gc.setNeighbors(python::extract<int>(python::list(graph[i])[0]), python::extract<int>(python::list(graph[i])[1]), python::extract<int>(python::list(graph[i])[2]));
+    }
+    gc.setDataCost(data_cost_int.data().begin());
+    gc.setSmoothCost(smoothness_cost_int.data().begin());
+    gc.expansion(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
+    for ( int  i = 0; i < num_vertices; i++ ){
+        result.data()[i] = gc.whatLabel(i);
+    }
+
+    return result;
+}
+
+pyublas::numpy_vector<int>
+cut_from_graph(const boost::python::list & graph,
+    const pyublas::numpy_matrix<double>& data_cost,
+    const pyublas::numpy_matrix<double>& smoothness_cost){
+    const int num_labels = smoothness_cost.size1();
+    const int num_vertices = data_cost.size1();
 
     assert(smoothness_cost.size2() == num_labels);
     assert(data_cost.size2()==num_labels);
+
+    // rounding doubles to ints for more stable optimization
+    boost::numeric::ublas::matrix<int> smoothness_cost_int(num_labels, num_labels);
+    boost::numeric::ublas::vector<int> result(num_vertices);
+    boost::numeric::ublas::matrix<int> data_cost_int(num_vertices, num_labels);
+
+    for (int i=0; i<num_vertices*num_labels; i++){
+        data_cost_int.data()[i] = std::ceil(data_cost.data()[i]);
+    }
+    for (int i=0; i<num_labels*num_labels; i++){
+        smoothness_cost_int.data()[i] = std::ceil(smoothness_cost.data()[i]);
+    }
 
     GCoptimizationGeneralGraph gc(num_vertices, num_labels);
     for(python::ssize_t i=0;i<len(graph);i++) {
@@ -142,7 +173,7 @@ cut_from_graph(const boost::python::list & graph,
 boost::python::list
 cut_from_segments(const pyublas::numpy_vector<unsigned char> & masks,
     const pyublas::numpy_matrix<double>& data_cost,
-    const pyublas::numpy_matrix<double>& smoothness_cost){
+    const pyublas::numpy_matrix<double>& smoothness_cost, double fg_bias){
     const size_t ndims = masks.ndim();
     assert(ndims==3);
 
@@ -167,7 +198,7 @@ cut_from_segments(const pyublas::numpy_vector<unsigned char> & masks,
     // data cost for pixels constant, for segments given by data_cost 
     for (int l=0; l<num_labels; l++){
         for (int i=0; i<width*height; i++){
-            data_cost_int(i, l) = precision * precision * 1;
+            data_cost_int(i, l) = precision * precision * (l==0? 1:fg_bias);
         }
         for (int i=0; i<num_masks; i++){
             data_cost_int(i+width*height, l) = precision * precision * data_cost(i,l);
@@ -175,29 +206,30 @@ cut_from_segments(const pyublas::numpy_vector<unsigned char> & masks,
     }
     // smoothness cost!
     for (int i=0; i<num_labels*num_labels; i++){
-        smoothness_cost_int.data()[i] = 0 * precision * smoothness_cost.data()[i];
+        smoothness_cost_int.data()[i] =  precision * smoothness_cost.data()[i];
     }
 
     // iterate over all pixels and over all segments for neighborhoods
-    //for (int i = 0; i < height; i++){
-      //for (int j = 0; j < width; j++) {
-          //// pixel grid graph
+    for (int i = 0; i < height; i++){
+      for (int j = 0; j < width; j++) {
+          // pixel grid graph
           //if (i > 0)
               //gc.setNeighbors(i*width+j,(i-1)*width+j);
           //if (j > 0)
               //gc.setNeighbors(i*width+j,i*width+j-1);
-          //// segments nodes:
-          //for (int s = 0; s < num_masks; s++){
-              //if (masks[i, j, s]>0)
-                  //gc.setNeighbors(i*width+j, width*height + s);
-          //}
-      //}
-    //}
+          // segments nodes:
+          for (int s = 0; s < num_masks; s++){
+              if (masks(num_masks*(width * i + j) + s)>0){
+                  gc.setNeighbors(i*width+j, width*height + s);
+              }
+          }
+      }
+    }
 
     gc.setDataCost(data_cost_int.data().begin());
-    //gc.setSmoothCost(smoothness_cost_int.data().begin());
+    gc.setSmoothCost(smoothness_cost_int.data().begin());
     std::cout << "data energy:" << gc.giveDataEnergy() << std::endl;
-    gc.expansion(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
+    gc.expansion(2);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
     std::cout << "data energy after optimization:" << gc.giveDataEnergy() << std::endl;
     for (int  i = 0; i < height; i++ )
         for (int j = 0; j < width; j++)
