@@ -2,7 +2,12 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/overloads.hpp>
+#include <boost/python/exception_translator.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
+#include <exception>
 #include <pyublas/numpy.hpp>
+
 
 #include "GCoptimization.h"
 
@@ -210,10 +215,19 @@ cut_from_segments(const pyublas::numpy_vector<unsigned char> & masks,
 
 }
 
+//struct GCException;
+
+void exception_translator(const GCException& x) {
+  PyErr_SetString(PyExc_UserWarning, x.message);
+}
+
+
 BOOST_PYTHON_MODULE(gco_python)
     {
+        boost::python::register_exception_translator<GCException>(&exception_translator);
         boost::python::def("cut_VH", cut_VH);
         boost::python::def("cut_simple", cut_simple);
         boost::python::def("cut_from_graph", cut_from_graph);
+        boost::python::def("cut_from_graph_weighted", cut_from_graph_weighted);
         boost::python::def("cut_from_segments", cut_from_segments);
     }
