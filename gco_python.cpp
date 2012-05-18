@@ -126,7 +126,7 @@ cut_from_graph_weighted(const boost::python::list & graph,
     }
     gc.setDataCost(data_cost_int.data().begin());
     gc.setSmoothCost(smoothness_cost_int.data().begin());
-    gc.expansion(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
+    gc.swap(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
     for ( int  i = 0; i < num_vertices; i++ ){
         result.data()[i] = gc.whatLabel(i);
     }
@@ -162,7 +162,7 @@ cut_from_graph(const boost::python::list & graph,
     }
     gc.setDataCost(data_cost_int.data().begin());
     gc.setSmoothCost(smoothness_cost_int.data().begin());
-    gc.expansion(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
+    gc.swap(5);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
     for ( int  i = 0; i < num_vertices; i++ ){
         result.data()[i] = gc.whatLabel(i);
     }
