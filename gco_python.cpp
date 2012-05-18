@@ -1,3 +1,17 @@
+///////////////////////////////////////////////
+// Python wrappers for GCO
+// by Andreas Mueller amueller@ais.uni-bonn.deA
+// http://peekaboo-vision.blogspot.com
+//
+// Licence: BSD 3-clause
+//
+//
+// GCO is a graph-cut based energy minimization
+// framework based on alpha expansion and alpha-beta swaps
+// by Olga Veksler and Andrew Delong. 
+// You can download it at http://vision.csd.uwo.ca/code/
+
+
 #include <cassert>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -12,6 +26,7 @@
 #include "GCoptimization.h"
 
 using namespace boost;
+
 
 pyublas::numpy_matrix<int> cut_simple(const int& height, const int& width,
     const pyublas::numpy_matrix<double> & data_cost,
@@ -170,80 +185,6 @@ cut_from_graph(const boost::python::list & graph,
     return result;
 }
 
-boost::python::list
-cut_from_segments(const pyublas::numpy_vector<unsigned char> & masks,
-    const pyublas::numpy_matrix<double>& data_cost,
-    const pyublas::numpy_matrix<double>& smoothness_cost, double fg_bias){
-    const size_t ndims = masks.ndim();
-    assert(ndims==3);
-
-    const npy_intp * const dims = masks.dims();
-    const int num_masks = dims[2];
-    const int height = dims[0];
-    const int width = dims[1];
-    const int num_labels = smoothness_cost.size1();
-    assert(smoothness_cost.size2() == num_labels);
-    assert(data_cost.size1()==num_masks);
-    assert(data_cost.size2()==num_labels);
-
-    GCoptimizationGeneralGraph gc(width*height + num_masks, num_labels);
-
-    // rounding doubles to ints for more stable optimization
-    const int precision = 100;
-    boost::numeric::ublas::matrix<int> smoothness_cost_int(num_labels, num_labels);
-    boost::numeric::ublas::matrix<int> result_pixels(height, width);
-    boost::numeric::ublas::vector<int> result_segments(num_masks);
-    boost::numeric::ublas::matrix<int> data_cost_int((num_masks + width*height), num_labels);
-   
-    // data cost for pixels constant, for segments given by data_cost 
-    for (int l=0; l<num_labels; l++){
-        for (int i=0; i<width*height; i++){
-            data_cost_int(i, l) = precision * precision * (l==0? 1:fg_bias);
-        }
-        for (int i=0; i<num_masks; i++){
-            data_cost_int(i+width*height, l) = precision * precision * data_cost(i,l);
-        }
-    }
-    // smoothness cost!
-    for (int i=0; i<num_labels*num_labels; i++){
-        smoothness_cost_int.data()[i] =  precision * smoothness_cost.data()[i];
-    }
-
-    // iterate over all pixels and over all segments for neighborhoods
-    for (int i = 0; i < height; i++){
-      for (int j = 0; j < width; j++) {
-          // pixel grid graph
-          //if (i > 0)
-              //gc.setNeighbors(i*width+j,(i-1)*width+j);
-          //if (j > 0)
-              //gc.setNeighbors(i*width+j,i*width+j-1);
-          // segments nodes:
-          for (int s = 0; s < num_masks; s++){
-              if (masks(num_masks*(width * i + j) + s)>0){
-                  gc.setNeighbors(i*width+j, width*height + s);
-              }
-          }
-      }
-    }
-
-    gc.setDataCost(data_cost_int.data().begin());
-    gc.setSmoothCost(smoothness_cost_int.data().begin());
-    std::cout << "data energy:" << gc.giveDataEnergy() << std::endl;
-    gc.expansion(2);// run expansion for 5 iterations. For swap use gc.swap(num_iterations);
-    std::cout << "data energy after optimization:" << gc.giveDataEnergy() << std::endl;
-    for (int  i = 0; i < height; i++ )
-        for (int j = 0; j < width; j++)
-              result_pixels(i, j) = gc.whatLabel(i*width+j);
-          //result_pixels.data()[i] = data_cost_int(1,i);
-    
-    for ( int  i = 0; i < num_masks; i++ ){
-          result_segments[i] = gc.whatLabel(height*width + i);
-          //result_segments[i] = data_cost_int(0, width*height + i);
-    }
-    boost::python::list results;
-    results.append(result_pixels);
-    results.append(result_segments);
-    return results;
 
 }
 
