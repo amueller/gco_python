@@ -1,5 +1,5 @@
 import pyublas
-from gco_python import *
+from _gco_python import *
 
     #""" datacost is num_pixels*num_labels, smoothness_cost is num_labels*num_labels, num_pizels = width*height
         #it must be true that for each two labels i,j smoothness_cost(i,i) + smoothness_cost(j,j) <= smoothness_cost(i,j) + smoothness_cost(j,i)

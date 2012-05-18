@@ -254,7 +254,7 @@ void exception_translator(const GCException& x) {
 }
 
 
-BOOST_PYTHON_MODULE(gco_python)
+BOOST_PYTHON_MODULE(_gco_python)
     {
         boost::python::register_exception_translator<GCException>(&exception_translator);
         boost::python::def("cut_VH", cut_VH);
