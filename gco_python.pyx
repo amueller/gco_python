@@ -26,6 +26,20 @@ cdef extern from "GCoptimization.h":
 def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost,
         np.ndarray[np.int32_t, ndim=2, mode='c'] smoothness_cost, n_iter=5,
         algorithm='expansion'):
+    """
+    Apply multi-label graphcuts to grid graph.
+
+    Parameters
+    ----------
+    data_cost: ndarray, int32, shape=(width, height, n_labels)
+        Unary potentials
+    smoothness_cost: ndarray, int32, shape=(n_labels, n_labels)
+        Pairwise potentials for label compatibility
+    n_iter: int, (default=5)
+        Number of iterations
+    algorithm: string, `expansion` or `swap`, default=expansion
+        Whether to perform alpha-expansion or alpha-beta-swaps.
+    """
 
     if data_cost.shape[2] != smoothness_cost.shape[0]:
         raise ValueError("data_cost and smoothness_cost have incompatible shapes.\n"
@@ -46,6 +60,8 @@ def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost,
         gc.swap(n_iter)
     elif algorithm == 'expansion':
         gc.expansion(n_iter)
+    else:
+        raise ValueError("algorithm should be either `swap` or `expansion`. Got: %s" % algorithm)
 
     cdef np.npy_intp result_shape[2]
     result_shape[0] = w
@@ -61,6 +77,22 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
         np.ndarray[np.int32_t, ndim=2, mode='c'] data_cost,
         np.ndarray[np.int32_t, ndim=2, mode='c'] smoothness_cost, n_iter=5,
         algorithm='expansion'):
+    """
+    Apply multi-label graphcuts to arbitrary graph given by `edges`.
+
+    Parameters
+    ----------
+    edges: ndarray, int32, shape(n_edges, 2)
+        Rows correspond to edges in graph, given as vertex indices.
+    data_cost: ndarray, int32, shape=(n_vertices, n_labels)
+        Unary potentials
+    smoothness_cost: ndarray, int32, shape=(n_labels, n_labels)
+        Pairwise potentials for label compatibility
+    n_iter: int, (default=5)
+        Number of iterations
+    algorithm: string, `expansion` or `swap`, default=expansion
+        Whether to perform alpha-expansion or alpha-beta-swaps.
+    """
 
     if data_cost.shape[1] != smoothness_cost.shape[0]:
         raise ValueError("data_cost and smoothness_cost have incompatible shapes.\n"
@@ -82,6 +114,8 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
         gc.swap(n_iter)
     elif algorithm == 'expansion':
         gc.expansion(n_iter)
+    else:
+        raise ValueError("algorithm should be either `swap` or `expansion`. Got: %s" % algorithm)
 
     cdef np.npy_intp result_shape[1]
     result_shape[0] = n_vertices
