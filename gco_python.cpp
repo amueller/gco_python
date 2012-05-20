@@ -26,6 +26,7 @@
 #include "GCoptimization.h"
 
 using namespace boost;
+namespace boost::python = bp;
 
 
 pyublas::numpy_matrix<int> cut_simple(const int& height, const int& width,
@@ -112,7 +113,7 @@ cut_VH(const pyublas::numpy_matrix<double> & data_cost,
     }
 
 pyublas::numpy_vector<int>
-cut_from_graph_weighted(const boost::python::list & graph,
+cut_from_graph_weighted(const bp::list & graph,
     const pyublas::numpy_matrix<double>& data_cost,
     const pyublas::numpy_matrix<double>& smoothness_cost){
     const int num_labels = smoothness_cost.size1();
@@ -150,7 +151,7 @@ cut_from_graph_weighted(const boost::python::list & graph,
 }
 
 pyublas::numpy_vector<int>
-cut_from_graph(const boost::python::list & graph,
+cut_from_graph(const bp::list & graph,
     const pyublas::numpy_matrix<double>& data_cost,
     const pyublas::numpy_matrix<double>& smoothness_cost){
     const int num_labels = smoothness_cost.size1();
@@ -186,8 +187,6 @@ cut_from_graph(const boost::python::list & graph,
 }
 
 
-}
-
 //struct GCException;
 
 void exception_translator(const GCException& x) {
@@ -197,10 +196,9 @@ void exception_translator(const GCException& x) {
 
 BOOST_PYTHON_MODULE(_gco_python)
     {
-        boost::python::register_exception_translator<GCException>(&exception_translator);
-        boost::python::def("cut_VH", cut_VH);
-        boost::python::def("cut_simple", cut_simple);
-        boost::python::def("cut_from_graph", cut_from_graph);
-        boost::python::def("cut_from_graph_weighted", cut_from_graph_weighted);
-        boost::python::def("cut_from_segments", cut_from_segments);
+        bp::register_exception_translator<GCException>(&exception_translator);
+        bp::def("cut_VH", cut_VH);
+        bp::def("cut_simple", cut_simple);
+        bp::def("cut_from_graph", cut_from_graph);
+        bp::def("cut_from_graph_weighted", cut_from_graph_weighted);
     }
