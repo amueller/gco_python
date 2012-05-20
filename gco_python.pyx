@@ -3,7 +3,6 @@ cimport numpy as np
 
 np.import_array()
 
-
 cdef extern from "GCoptimization.h":
     cdef cppclass GCoptimizationGridGraph:
         GCoptimizationGridGraph(int width, int height, int n_labels)
@@ -11,6 +10,7 @@ cdef extern from "GCoptimization.h":
         void setSmoothCost(int *)
         void expansion(int n_iterations)
         void swap(int n_iterations)
+        void gc.setSmoothCostVH(int* pairwise, int* V, int* H)
         int whatLabel(int node)
 
     cdef cppclass GCoptimizationGeneralGraph:

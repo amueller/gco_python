@@ -14,18 +14,15 @@ Installation
 
 - Download gco from http://vision.csd.uwo.ca/code/ and compile.
 
-- Install boost-python (on debian/ubuntu: sudo apt-get install libboost-python-dev).
+- Download and install Cython (use your package manager).
 
-- Download and install pyublas: http://mathema.tician.de/software/pyublas.
+- Set the path in setup.py  to point to the path of gco.
 
-- Set the paths in ``Makefile`` to point to the path of your Python includes and gco.
+- run ``python setup.py build``
 
-- run ``make``
+- Install or add the build path (build/lib.XXX) to your ``PYTHONPATH``
 
-- Add the path to `gco_python` to your ``PYTHONPATH``
-
-- Run ``python -c "import gco_python; gco_python.demo()"`` for a test.
-
+- Run example.py for a simple example.
 
 Usage
 -----
@@ -39,14 +36,17 @@ This package gives a high level interface to gco, providing the following functi
     Graph cut on a 2D grid using a global label affinity-matrix.
 
 ``cut_VH``:
+    NOT DONE YET
     Graph cut on a 2D grid using a global label affinity-matrix and edge-weights.
     ``V`` contains the weights for vertical edges, ``H`` for horizontal ones.
 
-``cut_from_grpah``:
+``cut_from_graph``:
     Graph cut on an arbitrary graph with global label affinity-matrix.
 
-``cut_from_grpah``:
+``cut_from_graph_weighted``:
+    NOT DONE YET
     Graph cut on an arbitrary graph with global label affinity-matrix and
     edgeweights.
 
-See ``example.py`` and ``example_middlebury.py`` for examples.
+See ``example.py`` and ``example_middlebury.py`` for examples and the gco README
+for more details.
