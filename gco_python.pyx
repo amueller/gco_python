@@ -11,7 +11,6 @@ cdef extern from "GCoptimization.h":
         void setSmoothCost(int *)
         void expansion(int n_iterations)
         void swap(int n_iterations)
-        void expansion(int n_iterations)
         int whatLabel(int node)
 
 def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost, np.ndarray[np.int32_t, ndim=2, mode='c'] smoothness_cost, n_iter=5, algorithm='expansion'):
@@ -28,8 +27,8 @@ def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost, np.ndarray[np
     gc.setSmoothCost(<int*>smoothness_cost.data)
     if algorithm == 'swap':
         gc.swap(n_iter)
-    #elif algorithm == 'expansion':
-        #gc.expansion(n_iter)
+    elif algorithm == 'expansion':
+        gc.expansion(n_iter)
 
     cdef np.npy_intp result_shape[2]
     result_shape[0] = h
