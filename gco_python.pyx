@@ -10,7 +10,8 @@ cdef extern from "GCoptimization.h":
         void setSmoothCost(int *)
         void expansion(int n_iterations)
         void swap(int n_iterations)
-        void gc.setSmoothCostVH(int* pairwise, int* V, int* H)
+        void expansion(int n_iterations) except +handle_exception
+        void setSmoothCostVH(int* pairwise, int* V, int* H)
         int whatLabel(int node)
 
     cdef cppclass GCoptimizationGeneralGraph:
