@@ -1,2 +1,2 @@
 import pyublas
-from _gco_python import *
+from pygco import *
