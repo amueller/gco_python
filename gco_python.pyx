@@ -23,17 +23,17 @@ cdef extern from "GCoptimization.h":
         int whatLabel(int node)
 
 
-def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost,
-        np.ndarray[np.int32_t, ndim=2, mode='c'] smoothness_cost, n_iter=5,
+def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] unary_cost,
+        np.ndarray[np.int32_t, ndim=2, mode='c'] pairwise_cost, n_iter=5,
         algorithm='expansion'):
     """
     Apply multi-label graphcuts to grid graph.
 
     Parameters
     ----------
-    data_cost: ndarray, int32, shape=(width, height, n_labels)
+    unary_cost: ndarray, int32, shape=(width, height, n_labels)
         Unary potentials
-    smoothness_cost: ndarray, int32, shape=(n_labels, n_labels)
+    pairwise_cost: ndarray, int32, shape=(n_labels, n_labels)
         Pairwise potentials for label compatibility
     n_iter: int, (default=5)
         Number of iterations
@@ -41,21 +41,23 @@ def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost,
         Whether to perform alpha-expansion or alpha-beta-swaps.
     """
 
-    if data_cost.shape[2] != smoothness_cost.shape[0]:
-        raise ValueError("data_cost and smoothness_cost have incompatible shapes.\n"
-            "data_cost must be height x width x n_labels, smoothness_cost must be n_labels x n_labels.\n"
-            "Got: data_cost: (%d, %d, %d), smoothness_cost: (%d, %d)"
-            %(data_cost.shape[0], data_cost.shape[1], data_cost.shape[2],
-                smoothness_cost.shape[0], smoothness_cost.shape[1]))
-    if smoothness_cost.shape[1] != smoothness_cost.shape[0]:
-        raise ValueError("smoothness_cost must be a square matrix.")
-    cdef int h = data_cost.shape[1]
-    cdef int w = data_cost.shape[0]
-    cdef int n_labels = smoothness_cost.shape[0]
+    if unary_cost.shape[2] != pairwise_cost.shape[0]:
+        raise ValueError("unary_cost and pairwise_cost have incompatible shapes.\n"
+            "unary_cost must be height x width x n_labels, pairwise_cost must be n_labels x n_labels.\n"
+            "Got: unary_cost: (%d, %d, %d), pairwise_cost: (%d, %d)"
+            %(unary_cost.shape[0], unary_cost.shape[1], unary_cost.shape[2],
+                pairwise_cost.shape[0], pairwise_cost.shape[1]))
+    if pairwise_cost.shape[1] != pairwise_cost.shape[0]:
+        raise ValueError("pairwise_cost must be a square matrix.")
+    cdef int h = unary_cost.shape[1]
+    cdef int w = unary_cost.shape[0]
+    cdef int n_labels = pairwise_cost.shape[0]
+    if (pairwise_cost != pairwise_cost.T).any():
+        raise ValueError("pairwise_cost must be symmetric.")
 
     cdef GCoptimizationGridGraph* gc = new GCoptimizationGridGraph(h, w, n_labels)
-    gc.setDataCost(<int*>data_cost.data)
-    gc.setSmoothCost(<int*>smoothness_cost.data)
+    gc.setDataCost(<int*>unary_cost.data)
+    gc.setSmoothCost(<int*>pairwise_cost.data)
     if algorithm == 'swap':
         gc.swap(n_iter)
     elif algorithm == 'expansion':
@@ -74,8 +76,8 @@ def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] data_cost,
 
 
 def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
-        np.ndarray[np.int32_t, ndim=2, mode='c'] data_cost,
-        np.ndarray[np.int32_t, ndim=2, mode='c'] smoothness_cost, n_iter=5,
+        np.ndarray[np.int32_t, ndim=2, mode='c'] unary_cost,
+        np.ndarray[np.int32_t, ndim=2, mode='c'] pairwise_cost, n_iter=5,
         algorithm='expansion'):
     """
     Apply multi-label graphcuts to arbitrary graph given by `edges`.
@@ -84,32 +86,34 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
     ----------
     edges: ndarray, int32, shape(n_edges, 2)
         Rows correspond to edges in graph, given as vertex indices.
-    data_cost: ndarray, int32, shape=(n_vertices, n_labels)
+    unary_cost: ndarray, int32, shape=(n_vertices, n_labels)
         Unary potentials
-    smoothness_cost: ndarray, int32, shape=(n_labels, n_labels)
+    pairwise_cost: ndarray, int32, shape=(n_labels, n_labels)
         Pairwise potentials for label compatibility
     n_iter: int, (default=5)
         Number of iterations
     algorithm: string, `expansion` or `swap`, default=expansion
         Whether to perform alpha-expansion or alpha-beta-swaps.
     """
+    if (pairwise_cost != pairwise_cost.T).any():
+        raise ValueError("pairwise_cost must be symmetric.")
 
-    if data_cost.shape[1] != smoothness_cost.shape[0]:
-        raise ValueError("data_cost and smoothness_cost have incompatible shapes.\n"
-            "data_cost must be height x width x n_labels, smoothness_cost must be n_labels x n_labels.\n"
-            "Got: data_cost: (%d, %d), smoothness_cost: (%d, %d)"
-            %(data_cost.shape[0], data_cost.shape[1],
-                smoothness_cost.shape[0], smoothness_cost.shape[1]))
-    if smoothness_cost.shape[1] != smoothness_cost.shape[0]:
-        raise ValueError("smoothness_cost must be a square matrix.")
-    cdef int n_vertices = data_cost.shape[0]
-    cdef int n_labels = smoothness_cost.shape[0]
+    if unary_cost.shape[1] != pairwise_cost.shape[0]:
+        raise ValueError("unary_cost and pairwise_cost have incompatible shapes.\n"
+            "unary_cost must be height x width x n_labels, pairwise_cost must be n_labels x n_labels.\n"
+            "Got: unary_cost: (%d, %d), pairwise_cost: (%d, %d)"
+            %(unary_cost.shape[0], unary_cost.shape[1],
+                pairwise_cost.shape[0], pairwise_cost.shape[1]))
+    if pairwise_cost.shape[1] != pairwise_cost.shape[0]:
+        raise ValueError("pairwise_cost must be a square matrix.")
+    cdef int n_vertices = unary_cost.shape[0]
+    cdef int n_labels = pairwise_cost.shape[0]
 
     cdef GCoptimizationGeneralGraph* gc = new GCoptimizationGeneralGraph(n_vertices, n_labels)
     for e in edges:
         gc.setNeighbors(e[0], e[1])
-    gc.setDataCost(<int*>data_cost.data)
-    gc.setSmoothCost(<int*>smoothness_cost.data)
+    gc.setDataCost(<int*>unary_cost.data)
+    gc.setSmoothCost(<int*>pairwise_cost.data)
     if algorithm == 'swap':
         gc.swap(n_iter)
     elif algorithm == 'expansion':
