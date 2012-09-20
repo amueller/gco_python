@@ -1,5 +1,5 @@
-ipygco
-======
+pygco
+=====
 
 Python wrappers for GCO alpha-expansion and alpha-beta-swaps.
 These wrappers provide a high level interface for graph cut
@@ -12,17 +12,41 @@ See my blog for examples and comments: [peekaboo-vision.blogspot.com](https://pe
 Installation
 ------------
 
-- Download gco from http://vision.csd.uwo.ca/code/ and compile.
-
+For Linux
+---------
 - Download and install Cython (use your package manager).
 
-- Set the path in setup.py  to point to the path of gco.
-
-- run ``python setup.py build``
+- run ``make``
 
 - Install or add the build path (build/lib.XXX) to your ``PYTHONPATH``
 
 - Run example.py for a simple example.
+
+
+For Windows
+-----------
+- Make sure Cython is installed (included in enthought Python distribution for example)
+
+- Download original source from http://vision.csd.uwo.ca/code/gco-v3.0.zip
+
+- Build gco with your compiler of choice.
+
+- Adjust the path to gco in setup.py.
+
+- run ``python setup.py build``.
+
+- Install library or add to library path.
+
+- run example.py for a simple example.
+
+
+Troubleshooting
+---------------
+There have been some problems compiling gco (not my wrappers) using gcc4.7.
+Try an older version instead. You can also fix the headers to work with newer
+version if you like.
+Please complain upstream.
+
 
 Usage
 -----
