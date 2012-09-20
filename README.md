@@ -45,7 +45,7 @@ Troubleshooting
 There have been some problems compiling gco (not my wrappers) using gcc4.7.
 Try an older version instead. You can also fix the headers to work with newer
 version if you like.
-Please complain upstream.
+There should be a fix available upstream soon. Thanks to Andrew Delong.
 
 
 Usage
