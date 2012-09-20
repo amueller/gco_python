@@ -1,6 +1,14 @@
-GCO_LIB=../gco/
-GCO_INC=../gco/
 PY_INC=/usr/include/python2.7
 
-gco_python:
-	g++ -fPIC -shared gco_python.cpp -I$(GCO_INC) -L$(GCO_LIB) -lgco -lboost_python -I$(PY_INC) -o _gco_python.so
+gco_python: gco
+	g++ -fPIC -shared gco_python.cpp -lgco -lboost_python -I$(PY_INC) -o _gco_python.so
+
+gco-v3.0.zip:
+	wget http://vision.csd.uwo.ca/code/gco-v3.0.zip
+
+gco_src: gco-v3.0.zip
+	mkdir gco_src
+	cd gco_src && unzip ../gco-v3.0.zip
+
+gco: gco_src
+	g++ -fPIC -shared -Lgco_src -Igco_src gco_src/GCoptimization.cpp gco_src/LinkedBlockList.cpp gco_src/graph.cpp gco_src/maxflow.cpp -o gco.so
