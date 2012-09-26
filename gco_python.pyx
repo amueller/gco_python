@@ -18,6 +18,7 @@ cdef extern from "GCoptimization.h":
         void setDataCost(int *)
         void setSmoothCost(int *)
         void setNeighbors(int, int)
+        void setNeighbors(int, int, int)
         void expansion(int n_iterations)
         void swap(int n_iterations)
         int whatLabel(int node)
@@ -144,8 +145,9 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
 
     Parameters
     ----------
-    edges: ndarray, int32, shape(n_edges, 2)
+    edges: ndarray, int32, shape(n_edges, 2 or 3)
         Rows correspond to edges in graph, given as vertex indices.
+        if edges is n_edges x 3 then third parameter is used as edge weight
     unary_cost: ndarray, int32, shape=(n_vertices, n_labels)
         Unary potentials
     pairwise_cost: ndarray, int32, shape=(n_labels, n_labels)
@@ -171,7 +173,10 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
 
     cdef GCoptimizationGeneralGraph* gc = new GCoptimizationGeneralGraph(n_vertices, n_labels)
     for e in edges:
-        gc.setNeighbors(e[0], e[1])
+        if e.shape[0] == 3:
+            gc.setNeighbors(e[0], e[1], e[2])
+        else:
+            gc.setNeighbors(e[0], e[1])
     gc.setDataCost(<int*>unary_cost.data)
     gc.setSmoothCost(<int*>pairwise_cost.data)
     if algorithm == 'swap':
