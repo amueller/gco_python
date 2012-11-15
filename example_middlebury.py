@@ -36,7 +36,7 @@ def potts_example():
     plt.subplot(232, xticks=(), yticks=())
     plt.imshow(img1)
     plt.subplot(233, xticks=(), yticks=())
-    plt.imshow(np.argmax(unaries, axis=2), interpolation='nearest')
+    plt.imshow(np.argmin(unaries, axis=2), interpolation='nearest')
     plt.subplot(223, xticks=(), yticks=())
     plt.imshow(potts_cut.reshape(newshape), interpolation='nearest')
     plt.subplot(224, xticks=(), yticks=())
