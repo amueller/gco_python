@@ -16,9 +16,9 @@ For Linux
 ---------
 - Download and install Cython (use your package manager).
 
-- run ``make``
+- If you are not using Python 2.7, please adjust the python includ path in Makefile.
 
-- Install or add the build path (build/lib.XXX) to your ``PYTHONPATH``
+- run ``make``
 
 - Run example.py for a simple example.
 
@@ -35,16 +35,15 @@ For Windows
 
 - run ``python setup.py build``.
 
-- Install library or add to library path.
-
 - run example.py for a simple example.
 
 
 Troubleshooting
 ---------------
 There have been some problems compiling gco (not my wrappers) using gcc4.7.
-Try an older version instead. You can also fix the headers to work with newer
-version if you like.
+It can be fixed by adding
+``#include <cstddef>``
+into GCoptimization.h.
 There should be a fix available upstream soon. Thanks to Andrew Delong.
 
 
