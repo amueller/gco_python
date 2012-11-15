@@ -1,7 +1,7 @@
 PY_INC=/usr/include/python2.7
 
 gco_python: gco.so
-	python setup.py build
+	python setup.py build_ext -i
 
 gco-v3.0.zip:
 	wget http://vision.csd.uwo.ca/code/gco-v3.0.zip
