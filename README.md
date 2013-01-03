@@ -16,8 +16,6 @@ For Linux
 ---------
 - Download and install Cython (use your package manager).
 
-- If you are not using Python 2.7, please adjust the python includ path in Makefile.
-
 - run ``make``
 
 - Run example.py for a simple example.
@@ -29,7 +27,7 @@ For Windows
 
 - Download original source from http://vision.csd.uwo.ca/code/gco-v3.0.zip
 
-- Build gco with your compiler of choice.
+- Build gco with your compiler of choice. Create a dynamic library at libgco.so.
 
 - Adjust the path to gco in setup.py.
 
@@ -41,10 +39,7 @@ For Windows
 Troubleshooting
 ---------------
 There have been some problems compiling gco (not my wrappers) using gcc4.7.
-It can be fixed by adding
-``#include <cstddef>``
-into GCoptimization.h.
-There should be a fix available upstream soon. Thanks to Andrew Delong.
+Please install gcc-4.6 and adjust the call in Makefile accordingly.
 
 
 Usage
