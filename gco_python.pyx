@@ -5,23 +5,23 @@ np.import_array()
 
 cdef extern from "GCoptimization.h":
     cdef cppclass GCoptimizationGridGraph:
-        GCoptimizationGridGraph(int width, int height, int n_labels)
-        void setDataCost(int *)
-        void setSmoothCost(int *)
-        void expansion(int n_iterations)
-        void swap(int n_iterations)
-        void setSmoothCostVH(int* pairwise, int* V, int* H)
-        int whatLabel(int node)
+        GCoptimizationGridGraph(int width, int height, int n_labels) except +
+        void setDataCost(int *) except +
+        void setSmoothCost(int *) except +
+        void expansion(int n_iterations) except +
+        void swap(int n_iterations) except +
+        void setSmoothCostVH(int* pairwise, int* V, int* H) except +
+        int whatLabel(int node) except +
 
     cdef cppclass GCoptimizationGeneralGraph:
-        GCoptimizationGeneralGraph(int n_vertices, int n_labels)
-        void setDataCost(int *)
-        void setSmoothCost(int *)
-        void setNeighbors(int, int)
-        void setNeighbors(int, int, int)
-        void expansion(int n_iterations)
-        void swap(int n_iterations)
-        int whatLabel(int node)
+        GCoptimizationGeneralGraph(int n_vertices, int n_labels) except +
+        void setDataCost(int *) except +
+        void setSmoothCost(int *) except +
+        void setNeighbors(int, int) except +
+        void setNeighbors(int, int, int) except +
+        void expansion(int n_iterations) except +
+        void swap(int n_iterations) except +
+        int whatLabel(int node) except +
 
 
 def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] unary_cost,
@@ -73,6 +73,8 @@ def cut_simple(np.ndarray[np.int32_t, ndim=3, mode='c'] unary_cost,
     cdef int * result_ptr = <int*>result.data
     for i in xrange(w * h):
         result_ptr[i] = gc.whatLabel(i)
+
+    del gc
     return result
 
 def cut_simple_vh(np.ndarray[np.int32_t, ndim=3, mode='c'] unary_cost,
@@ -133,6 +135,7 @@ def cut_simple_vh(np.ndarray[np.int32_t, ndim=3, mode='c'] unary_cost,
     cdef int * result_ptr = <int*>result.data
     for i in xrange(w * h):
         result_ptr[i] = gc.whatLabel(i)
+    del gc
     return result
 
 
@@ -192,4 +195,5 @@ def cut_from_graph(np.ndarray[np.int32_t, ndim=2, mode='c'] edges,
     cdef int * result_ptr = <int*>result.data
     for i in xrange(n_vertices):
         result_ptr[i] = gc.whatLabel(i)
+    del gc
     return result
