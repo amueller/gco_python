@@ -1,19 +1,35 @@
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Distutils import build_ext
 import os
-import numpy
 
-gco_directory = "gco_src"
+try:
+    # Attempt to set up the cython module
+    from Cython.Distutils import build_ext
+    import numpy
 
-files = ['GCoptimization.cpp', 'graph.cpp', 'LinkedBlockList.cpp',
-         'maxflow.cpp']
+    gco_directory = "gco_src"
 
-files = [os.path.join(gco_directory, f) for f in files]
-files.insert(0, "gco_python.pyx")
+    files = ['GCoptimization.cpp', 'graph.cpp', 'LinkedBlockList.cpp',
+             'maxflow.cpp']
 
-setup(cmdclass={'build_ext': build_ext},
-      ext_modules=[Extension("pygco", files, language="c++",
-                             include_dirs=[gco_directory, numpy.get_include()],
-                             library_dirs=[gco_directory],
-                             extra_compile_args=["-fpermissive"])])
+    files = [os.path.join(gco_directory, f) for f in files]
+    files.insert(0, "gco_python.pyx")
+
+    setup(
+        name='pygco',
+        install_requires=['cython', 'numpy'],
+        cmdclass={'build_ext': build_ext},
+        ext_modules=[Extension(
+            "pygco", files, language="c++",
+            include_dirs=[gco_directory, numpy.get_include()],
+            library_dirs=[gco_directory],
+            extra_compile_args=["-fpermissive"]
+        )],
+    )
+except ImportError:
+    # If cython or numpy are not available, then do not try to configure the
+    # cython extension, just record that we need them as dependencies
+    setup(
+        name='pygco',
+        install_requires=['cython', 'numpy']
+    )
