@@ -12,6 +12,10 @@ See my blog for examples and comments: [peekaboo-vision.blogspot.com](https://pe
 Installation
 ------------
 
+With Pip
+--------
+- Run `pip install git+git://amueller/gco_python`
+
 For Linux
 ---------
 - Download and install Cython (use your package manager).
