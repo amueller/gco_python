@@ -1,6 +1,8 @@
 pygco
 =====
 
+![travis status](https://travis-ci.org/amueller/gco_python.svg?branch=master)
+
 Python wrappers for GCO alpha-expansion and alpha-beta-swaps.
 These wrappers provide a high level interface for graph cut
 inference for multi-label problems.
@@ -14,7 +16,7 @@ Installation
 
 With Pip
 --------
-- Run `pip install git+git://amueller/gco_python`
+- Run `pip install git+git://github.com/amueller/gco_python`
 
 For Linux
 ---------
