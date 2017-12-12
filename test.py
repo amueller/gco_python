@@ -44,7 +44,6 @@ class TestPyGco(unittest.TestCase):
         """Test the cut_simple method."""
         unaries, pairwise, edges, expected = self.binary_data()
 
-        # do simple cut
         result = cut_simple(unaries, pairwise)
 
         self.assertTrue(np.array_equal(result, expected))
@@ -53,11 +52,38 @@ class TestPyGco(unittest.TestCase):
         """Test the cut_from_graph method."""
         unaries, pairwise, edges, expected = self.binary_data()
 
-        # do simple cut
         result = cut_from_graph(edges, unaries.reshape(-1, 2), pairwise)
         result = result.reshape(unaries.shape[:2])
 
         self.assertTrue(np.array_equal(result, expected))
+
+    def test_label_costs_simple(self):
+        """Test the label_costs argument with cut_simple."""
+        unaries, pairwise, edges, expected = self.binary_data()
+        # Give a slight preference to class 0
+        unaries[:, :, 1] += 1
+
+        result = cut_simple(unaries, pairwise, label_cost=1)
+        self.assertTrue(np.array_equal(result, expected))
+
+        # Try again with a very high label cost to collapse to a single label
+        result = cut_simple(unaries, pairwise, label_cost=1000)
+        self.assertTrue(np.array_equal(result, np.zeros_like(result)))
+
+    def test_label_costs_graph(self):
+        """Test the label_costs argument with cut_from_graph."""
+        unaries, pairwise, edges, expected = self.binary_data()
+        # Give a slight preference to class 0
+        unaries[:, :, 1] += 1
+
+        result = cut_from_graph(edges, unaries.reshape(-1, 2), pairwise, label_cost=1)
+        result = result.reshape(unaries.shape[:2])
+        self.assertTrue(np.array_equal(result, expected))
+
+        # Try again with a very high label cost to collapse to a single label
+        result = cut_from_graph(edges, unaries.reshape(-1, 2), pairwise, label_cost=1000)
+        result = result.reshape(unaries.shape[:2])
+        self.assertTrue(np.array_equal(result, np.zeros_like(result)))
 
 if __name__ == '__main__':
     unittest.main()

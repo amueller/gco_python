@@ -3,6 +3,8 @@ from distutils.extension import Extension
 import os
 import subprocess
 
+VERSION = '0.0.1'
+
 try:
     # Attempt to set up the cython module
     from Cython.Distutils import build_ext
@@ -22,6 +24,7 @@ try:
 
     setup(
         name='pygco',
+        version=VERSION,
         install_requires=['cython', 'numpy'],
         cmdclass={'build_ext': build_ext},
         ext_modules=[Extension(
@@ -36,5 +39,6 @@ except ImportError:
     # cython extension, just record that we need them as dependencies
     setup(
         name='pygco',
+        version=VERSION,
         install_requires=['cython', 'numpy']
     )
